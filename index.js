@@ -1,42 +1,11 @@
 //study: https://molunerfinn.com/nodejs-1/
 var cheerio = require('cheerio');
 var request = require('sync-request');
-var superagent = require('superagent-charset');
-var Iconv = require('iconv').Iconv;
 var fs = require('fs');
 
-url = 'http://bbs.guitarera.com/thread-2049-1-1.html'; //李斯特 page 1
+url = 'http://movie.douban.com/subject/25724855/'; //这里是举个例子而已，豆瓣的具体的电影网址可以自己替换
 var html = '';
 html = request('GET', url).getBody().toString();
-
-superagent.get(url) // 获取网页内容
-    .charset('gb2312') // 转码-将gb2312格式转成utf-8
-    .end(function (err, res) {
-      // 常规的错误处理
-      if (err) {
-        return next(err);
-      }
-      console.log(res);
-      //var $ = cheerio.load(res.text);
-    });
-//readPost(html);
-function readPost(html) {
-  var $ = cheerio.load(html);
-  $("#postlist").children().each(function(i, elem) {
-    var pattern = /\bpost_\d{5}\b/;
-    var post_id = $(this).attr('id') ;
-    if(pattern.test(post_id) == true){
-      //匹配帖子id
-      console.log($(this).attr('id'));
-      var a = "#"+ post_id+" .pcb h2";
-      var con = $(a).text();
-      console.log(a);
-      //var con = $(this+" .pcb h2").text();
-
-      console.log(con);
-    }
-  });
-}
 //handleDB(html);
 function handleDB(html){
   var $ = cheerio.load(html); //引入cheerio的方法。这样的引入方法可以很好的结合jQuery的用法。
