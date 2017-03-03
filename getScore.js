@@ -1,104 +1,114 @@
 //study: https://molunerfinn.com/nodejs-1/
-var cheerio = require('cheerio');
-var request = require('sync-request');
-var superagent = require('superagent-charset');
-var Iconv = require('iconv').Iconv;
-var fs = require('fs');
+const cheerio   = require('cheerio');
+const request   = require('sync-request');
+const iconv     = require('iconv-lite');
+const fs        = require('fs');
+const fse = require('fs-extra');
+const download  = require('download');
+const events    = require("events");
+const superagent = require('superagent');
+const charset = require('superagent-charset');
+charset(superagent);
+//var emitter = new events.EventEmitter();
 
-url = 'http://bbs.guitarera.com/thread-2049-1-1.html'; //李斯特 page 1
-var html = '';
-html = request('GET', url).getBody().toString();
+//setCookie ();
+//emitter.on("setCookie", getPost);    //监听setCookie事件
+// var url = 'http://bbs.guitarera.com/thread-2049-1-1.html'; //李斯特 page 1
+// var html = '';
+// var cookie;
 
-superagent.get(url) // 获取网页内容
-    .charset('gb2312') // 转码-将gb2312格式转成utf-8
-    .end(function (err, res) {
-      // 常规的错误处理
-      if (err) {
-        return next(err);
-      }
-      console.log(res);
-      //var $ = cheerio.load(res.text);
+//readPost(str);
+for (var ai=1;ai<=7;ai++) {
+    var url = 'http://bbs.guitarera.com/thread-2049-'+ai+'-1.html';
+    crawlPage(url);
+}
+function readPost(url,html) {
+    var fileName="";
+    var fileContent = "";
+    fileContent += "[原文链接]("+url+")\r\r";
+    var $ = cheerio.load(html);
+    fileName += $("#thread_subject").text();
+    fileName += "page-"+$("#pgt .pgt .pg>strong").text();
+    $("#postlist").children().each(function(i, elem) {
+        var pattern = /\bpost_\d{3,10}\b/;
+        var post_id = $(this).attr('id') ;
+        if(pattern.test(post_id) == true){
+            //匹配帖子id
+            //console.log($(this).attr('id'));
+
+            var postTitle = $("#"+ post_id+" .pcb h2").text();
+            var postContent = $("#"+ post_id+" .pcb .t_fsz").text();
+            //var postContent = $("#postmessage_"+post_id).text();
+            console.log(postTitle);
+            fileContent+=postTitle+"\r\r";
+            var allLinks = $("#"+ post_id+" .attnm a").map(function () {
+                return {
+                    "url":"http://bbs.guitarera.com/"+$(this).attr("href"),
+                    "text":$(this).text()
+                };
+            });
+            fileContent+="曲谱链接\r\r";
+            for(var i=0;i<allLinks.length;i++){
+                fileContent += "["+allLinks[i].text+"]("+allLinks[i].url+")\r\r";
+            }
+
+            //fileContent+=postContent+"\r\r";
+            fileContent+="-------------------"+"\r";
+            //
+            //   download(downloadLink, 'dist').then(() => {
+            //     console.log('done!');
+            // });
+        }
     });
-//readPost(html);
-function readPost(html) {
-  var $ = cheerio.load(html);
-  $("#postlist").children().each(function(i, elem) {
-    var pattern = /\bpost_\d{5}\b/;
-    var post_id = $(this).attr('id') ;
-    if(pattern.test(post_id) == true){
-      //匹配帖子id
-      console.log($(this).attr('id'));
-      var a = "#"+ post_id+" .pcb h2";
-      var con = $(a).text();
-      console.log(a);
-      //var con = $(this+" .pcb h2").text();
+    fse.ensureDirSync("./score");
+    fs.writeFileSync("./score/"+fileName+".md",fileContent);
+}
 
-      console.log(con);
+function setCookie () {
+    superagent.post('http://bbs.guitarera.com/member.php?mod=logging&action=login&loginsubmit=yes&infloat=yes&lssubmit=yes')  //登录提交地址
+        .type("form")
+        .send({username:"1016zym"})
+        .send({password:"hebe1016"})
+        .send({quickforward:"yes"})
+        .send({handlekey:"ls"})
+        .end(function(err, res){
+            if (err) throw err;
+            cookie = res.header['set-cookie']             //从response中得到cookie
+            console.log(cookie);
+            emitter.emit("setCookie", cookie)
+        })
+}
+
+function getPost () {
+    var cookieStr = "";
+    for(var i=0;i<cookie.length;i++)
+    {
+        cookieStr += cookie[i]+";";
     }
-  });
-}
-//handleDB(html);
-function handleDB(html){
-  var $ = cheerio.load(html); //引入cheerio的方法。这样的引入方法可以很好的结合jQuery的用法。
-  var info = $('#info');
-  // 获取电影名
-  var movieName = $('#content>h1>span').filter(function(i,el){
-    return $(this).attr('property') === 'v:itemreviewed';
-  }).text();
-  // 获取影片导演名
-  var directories = '- 导演：' + $('#info span a').filter(function(i,el){
-    return $(this).attr('rel') === 'v:directedBy';
-  }).text();
-  // 获取影片演员
-  var starsName = '- 主演：';
-  $('.actor .attrs a').each(function(i,elem){
-      starsName += $(this).text() + '/';
-  });
-  // 获取片长
-  var runTime = '- 片长：' + $('#info span').filter(function(i,el){
-    return $(this).attr('property') === 'v:runtime';
-  }).text();
-  // 获取影片类型
-  var kind = $('#info span').filter(function(i,el){
-    return $(this).attr('property') === 'v:genre'
-  }).text();
-    // 处理影片类型数据
-  var kLength = kind.length;
-  var kinds = '- 影  片类型：';
-  for (i = 0; i < kLength; i += 2){
-    kinds += kind.slice(i,i+2) + '/';
-  }
-  // 获取电影评分和电影评分人数
-    // 豆瓣
-  var DBScore = $('.ll.rating_num').text();
-  var DBVotes = $('a.rating_people>span').text().replace(/\B(?=(\d{3})+$)/g,',');
-  var DB = '- 豆  瓣评分：' + DBScore + '/10' + '(' + 'from' + DBVotes + 'users' + ')';
-    // IMDBLink
-  IMDBLink = $('#info').children().last().prev().attr('href');
+    console.log(cookieStr);
+    superagent.get("http://bbs.guitarera.com/thread-2049-1-1.html")             //随便论坛里的一个地址
+        .charset('gbk')
+        .set("Cookie", cookieStr)                 //在resquest中设置得到的cookie，只设置第四个足以（具体情况具体分析）
+        .set("Referer","http://bbs.guitarera.com/forum.php")
+        .set("Host","bbs.guitarera.com")
+        .end(function(err, res){
+            if (err){
+                throw err;
+            };
+            //do something
+            //console.log(res);
 
-  var data = movieName + '\r\n' + directories + '\r\n' + starsName + '\r\n' + runTime + '\r\n' + kinds + '\r\n'+ DB +'\r\n';
-  // 输出文件
-  fs.appendFile('dbmovie.txt', data, 'utf-8', function(err){
-    if (err) throw err;
-    else console.log('大体信息写入成功'+'\r\n' + data)
-  });
-}
-//console.log(html);
-function handleIMDB(Link){
-  var $ = cheerio.load(Link);
-  // 获取IMDB评分
-  var IMDBScore = $('.ratingValue span').filter(function(i,el){
-    return $(this).attr('itemprop') === 'ratingValue';
-  }).text();
-  // 获取IMDB评分人数
-  var IMDBVotes = $('.small').filter(function(i,el){
-    return $(this).attr('itemprop') === 'ratingCount';
-  }).text();
-  // 字符串拼接
-  var IMDB = '- IMDB评分：' + IMDBScore + '/10' + '(' + 'from' + IMDBVotes + 'users' + ')' + '\r\n';
-  // 输出文件
-  fs.appendFile('dbmovie.txt', IMDB, 'utf-8', function(err){
-    if (err) throw err;
-    else console.log('IMDB信息写入成功' + '\r\n' + IMDB)
-  });
+            readPost(res.text);
+        })
+};
+
+function crawlPage(url) {
+    superagent.get(url)             //随便论坛里的一个地址
+        .charset('gbk')
+        .end(function(err, res){
+            if (err){
+                throw err;
+            }
+            readPost(url,res.text);
+        })
 }
