@@ -5,9 +5,6 @@ import re
 import os
 
 
-def power(x):
-    return x*x
-
 def crawlSinglePage(url):
     # url = "http://bbs.guitarera.com/thread-2049-1-1.html"
     mdContent = ""
@@ -155,7 +152,7 @@ def getBoardAllPagesCountAndBoardName(url):
     return [count,boardSubject]
 
 # 获取当前版块页面所有的帖子页链接
-def getBoardAllPostUrl(url):
+def getBoardOnePagePostUrl(url):
     headers = {
         'Connection': 'Keep-Alive',
         'Accept': 'text/html, application/xhtml+xml, */*',
@@ -177,3 +174,20 @@ def getBoardAllPostUrl(url):
         print(postLink['href'])
         allPostsUrl.append("http://bbs.guitarera.com/"+postLink['href'])
     return allPostsUrl
+
+def getBoardAllPagesUrl(baseUrl):
+    # http://bbs.guitarera.com/forum-20-1.html
+    [count,boardName] = getBoardAllPagesCountAndBoardName(baseUrl)
+    urlLength = len(baseUrl)
+    allUrls = []
+    a = baseUrl.rfind('-', 0, urlLength)  # 反向查找第一个'-'
+    b = baseUrl.rfind('.html')  # 反向查找'.html'
+
+    # print(baseUrl[b+1:a])
+
+    part1 = baseUrl[0:a + 1]
+    part2 = baseUrl[b:urlLength]
+
+    for i in range(count):
+        allUrls.append(part1 + str(i + 1) + part2)
+    return allUrls
