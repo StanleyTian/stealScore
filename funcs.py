@@ -2,6 +2,7 @@ import urllib.request
 import requests
 from bs4 import BeautifulSoup
 import re
+import os
 
 
 def power(x):
@@ -107,3 +108,26 @@ def getPostAllPagesUrl(baseUrl,totalPageCount):
     for i in range(totalPageCount):
         allUrls.append(part1+str(i+1)+part2)
     return allUrls
+
+
+def crawlSinglePost(url, scoreFolderPath):
+    # preprocess 获取总页数
+    # test(url)
+    [totalCount, pageName] = getPostAllPagesCountAndPageName(url)
+    # 依据pageName新建一个文件夹（如果不存在的话）
+
+    if not os.path.exists(scoreFolderPath):
+        os.makedirs(scoreFolderPath)
+    # 获取当前帖子的所有页面，即 1,2,3,...,7 (共7页）
+    allUrls = getPostAllPagesUrl(url, totalCount)
+    # print(allUrls)
+    allContent = ""
+    for singleUrl in allUrls:
+        content = crawlSinglePage(singleUrl)  # 分别对每一个
+        print("完成了一页帖子的输出，长度为", len(content), 'url:', singleUrl)
+        allContent += content
+        # 打开文件
+    fo = open(scoreFolderPath + "/" + pageName + ".md", "w+")
+    # print ("文件名: ", fo.name)
+    line = fo.write(allContent)
+    fo.close()
