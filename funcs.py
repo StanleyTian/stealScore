@@ -88,10 +88,15 @@ def getPostAllPagesCountAndPageName(url):
     r = requests.get(url, headers=headers)
     htmlContent = r.text
     soup = BeautifulSoup(htmlContent)
-    countInfo = soup.select("#pgt .pg label span")[0].text
-    postSubject = soup.select("#thread_subject")[0].string # select返回是一个list，即使只有一个元素也是，[0]表示第一个元素
+    countInfoList =  soup.select("#pgt .pg label span")
+    postSubject = soup.select("#thread_subject")[0].string  # select返回是一个list，即使只有一个元素也是，[0]表示第一个元素
 
-    count = int(extractAllNumbers(countInfo)[0])
+    if len(countInfoList) <= 0:
+        count = 1
+    else:
+        countInfo = soup.select("#pgt .pg label span")[0].text
+        count = int(extractAllNumbers(countInfo)[0])
+
     return [count,postSubject]
 
 def getPostAllPagesUrl(baseUrl,totalPageCount):
@@ -109,7 +114,7 @@ def getPostAllPagesUrl(baseUrl,totalPageCount):
         allUrls.append(part1+str(i+1)+part2)
     return allUrls
 
-
+# 爬取一个帖子（包含帖子的所有页) 比如 http://bbs.guitarera.com/thread-2049-1-1.html
 def crawlSinglePost(url, scoreFolderPath):
     # preprocess 获取总页数
     # test(url)
@@ -131,3 +136,44 @@ def crawlSinglePost(url, scoreFolderPath):
     # print ("文件名: ", fo.name)
     line = fo.write(allContent)
     fo.close()
+
+# 获取当前版块页面的总页数和版块名
+def getBoardAllPagesCountAndBoardName(url):
+    headers = {
+        'Connection': 'Keep-Alive',
+        'Accept': 'text/html, application/xhtml+xml, */*',
+        'Accept-Language': 'en-US,en;q=0.8,zh-Hans-CN;q=0.5,zh-Hans;q=0.3',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko'
+    }
+    r = requests.get(url, headers=headers)
+    htmlContent = r.text
+    soup = BeautifulSoup(htmlContent)
+    countInfo = soup.select("#pgt .pg label span")[0].text
+    boardSubject = soup.select(".bm .xs2 a")[0].string # select返回是一个list，即使只有一个元素也是，[0]表示第一个元素
+
+    count = int(extractAllNumbers(countInfo)[0])
+    return [count,boardSubject]
+
+# 获取当前版块页面所有的帖子页链接
+def getBoardAllPostUrl(url):
+    headers = {
+        'Connection': 'Keep-Alive',
+        'Accept': 'text/html, application/xhtml+xml, */*',
+        'Accept-Language': 'en-US,en;q=0.8,zh-Hans-CN;q=0.5,zh-Hans;q=0.3',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko'
+    }
+    r = requests.get(url,headers = headers)
+    htmlContent = r.text
+    #print(r.text)
+    soup = BeautifulSoup(htmlContent);
+
+    pattern = re.compile("^thread-\d{1,10}-\d-\d.html$")  # 正则表达式 匹配形如 post_23456 的内容
+    pattern2 = re.compile("^normalthread_\d{1,10}$")
+    allPostsUrl = [];
+    threadList = soup.select("#threadlisttableid")[0]
+    singleThread = threadList.find_all_next(id = pattern2)
+    for tag in singleThread:
+        postLink = tag.find(href = pattern,class_="s xst")
+        print(postLink['href'])
+        allPostsUrl.append("http://bbs.guitarera.com/"+postLink['href'])
+    return allPostsUrl
