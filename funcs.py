@@ -77,14 +77,18 @@ def extractAllNumbers(str):
 
 def getPostAllPagesCountAndPageName(url):
     headers = {
+        'Host':'bbs.guitarera.com',
         'Connection': 'Keep-Alive',
-        'Accept': 'text/html, application/xhtml+xml, */*',
-        'Accept-Language': 'en-US,en;q=0.8,zh-Hans-CN;q=0.5,zh-Hans;q=0.3',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko'
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language': 'zh-CN,zh;q=0.8,en;q=0.6',
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.61 Mobile Safari/537.36'
     }
     r = requests.get(url, headers=headers)
     htmlContent = r.text
+    print(htmlContent)
     soup = BeautifulSoup(htmlContent)
+    print(soup.prettify())
+
     countInfoList =  soup.select("#pgt .pg label span")
     postSubject = soup.select("#thread_subject")[0].string  # select返回是一个list，即使只有一个元素也是，[0]表示第一个元素
 
