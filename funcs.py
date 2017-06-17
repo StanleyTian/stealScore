@@ -5,10 +5,12 @@ import os
 class Spider:
     headers = ""
     session = ""
+    currentPostIndex = -1
     # 构造函数
     def __init__(self,headers,session):
         self.headers = headers
         self.session = session
+        self.currentPostIndex = 1
     def crawlSinglePage(self,url):
         # url = "http://bbs.guitarera.com/thread-2049-1-1.html"
         mdContent = ""
@@ -120,25 +122,24 @@ class Spider:
         allUrls = self.getPostAllPagesUrl(url, totalCount)
         # print(allUrls)
         allContent = ""
+        print("正在输出：",pageName)
         for singleUrl in allUrls:
             content = self.crawlSinglePage(singleUrl)  # 分别对每一个
             print("完成了一页帖子的输出，长度为", len(content), 'url:', singleUrl)
             allContent += content
             # 打开文件
-        fo = open(scoreFolderPath + "/" + pageName + ".md", "w+")
+        allContent = "原帖链接 ["+allUrls[0]+"]("+allUrls[0]+")\r\r" + allContent
+        fo = open(scoreFolderPath + "/["+str(self.currentPostIndex)+"] " + pageName + ".md", "w+")
         # print ("文件名: ", fo.name)
         line = fo.write(allContent)
         fo.close()
+        self.currentPostIndex += 1
+        print("------------------")
 
     # 获取当前版块页面的总页数和版块名
     def getBoardAllPagesCountAndBoardName(self,url):
-        headers = {
-            'Connection': 'Keep-Alive',
-            'Accept': 'text/html, application/xhtml+xml, */*',
-            'Accept-Language': 'en-US,en;q=0.8,zh-Hans-CN;q=0.5,zh-Hans;q=0.3',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko'
-        }
-        r = self.session.get(url, headers=headers)
+
+        r = self.session.get(url, headers = self.headers)
         htmlContent = r.text
         soup = BeautifulSoup(htmlContent)
         countInfo = soup.select("#pgt .pg label span")[0].text
