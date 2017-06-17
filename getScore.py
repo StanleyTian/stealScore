@@ -17,7 +17,7 @@ url = "http://bbs.guitarera.com/thread-6013-1-1.html"
 boardBaseUrl = "http://bbs.guitarera.com/forum-20-1.html"
 # board
 # step 1: 获取当前board总页数
-agent = 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.61 Mobile Safari/537.36'
+agent = 'Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko'
 
 headers = {
     'Connection': 'Keep-Alive',
@@ -29,20 +29,22 @@ headers = {
 }
 
 session = requests.session()
-session.cookies = cookielib.LWPCookieJar(filename='cookies')
+session.cookies = cookielib.LWPCookieJar(filename='cookies_LWP')
 try:
-    session.cookies.load(ignore_discard = True)
+    session.cookies.load(ignore_discard = True,ignore_expires=True)
     print("Cookie 已加载")
 except:
     print("Cookie 未能加载")
 
-account = '1016zym'
-password = "2424d24be57cacd465d3a574b4dbfafd"
-simuLogin.login(account, password)
-allboardUrls = funcs.getBoardAllPagesUrl(boardBaseUrl)
+# account = '1016zym'
+# password = "2424d24be57cacd465d3a574b4dbfafd"
+# simuLogin.login(account, password)
+
+spider = funcs.Spider(headers,session)
+allboardUrls = spider.getBoardAllPagesUrl(boardBaseUrl)
 
 for boardUrl in allboardUrls:
-    allPostUrl = funcs.getBoardOnePagePostUrl(boardUrl)
+    allPostUrl = spider.getBoardOnePagePostUrl(boardUrl)
     # step 2: 获取当前board页面所有的帖子URL
     for postUrl in allPostUrl:
-        funcs.crawlSinglePost(postUrl,scoreFolderPath)
+        spider.crawlSinglePost(postUrl,scoreFolderPath)
