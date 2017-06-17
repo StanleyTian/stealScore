@@ -46,7 +46,7 @@ def login(account,password):
     print(soup.find(text=re.compile("1016zym")))
     return ""
 def getFormhash():
-    url = "http://bbs.guitarera.com/member.php?mod=register"
+    url = "http://bbs.guitarera.com/member.php?mod=register&mobile=no"
     page = session.get(url,headers=headers).text
     soup = BeautifulSoup(page)
     # print(soup.prettify())
