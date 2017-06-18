@@ -3,6 +3,8 @@ import re
 import os
 import json
 import time
+from progress.spinner import Spinner
+
 
 class Spider:
     headers = ""
@@ -48,6 +50,9 @@ class Spider:
 
         for i in downloadLinks:
             fullContent += "[" + i +"](http://bbs.guitarera.com/" + downloadLinks[i] + ")" + "\r\r"
+            self.download(downloadLinks[i])
+            self.rename("tmp",i)
+            time.sleep(5)
 
         fullContent += "--------------------------" + "\r\r"
 
@@ -148,6 +153,11 @@ class Spider:
             allUrls.append(part1+str(i+1)+part2)
         return allUrls
 
+    def getSinglePageAllDownloadLinks(self, soup):
+        allLinks = []
+
+        return
+
     # 爬取一个页面，比如一个帖子的一页
     def crawlSinglePage(self, url):
         # url = "http://bbs.guitarera.com/thread-2049-1-1.html"
@@ -172,6 +182,7 @@ class Spider:
         for singleFloorId in allFloorsId:
             mdContent += self.formatSingleFloor(singleFloorId,soup)
 
+        self.getSinglePageAllDownloadLinks(soup)
         #print(mdContent)
         return mdContent
 
@@ -193,7 +204,7 @@ class Spider:
             content = self.crawlSinglePage(singleUrl)  # 分别对每一个
             print("完成了一页帖子的输出，长度为", len(content), 'url:', singleUrl)
             allContent += content
-            time.sleep(1)
+            time.sleep(10)
             # 打开文件
         allContent = "原帖链接 ["+allUrls[0]+"]("+allUrls[0]+")\r\r" + allContent
         pdfIndex = self.settingIndex + 1;
@@ -235,3 +246,47 @@ class Spider:
 
         settingFile.write(json.dumps(self.setting, sort_keys=True, indent=4))
         settingFile.close()
+
+    def download(self,link):
+        r = self.session.get(link, headers=self.headers, allow_redirects=True, stream=True)
+        filename = "tmp"
+        print("开始写入文件：", filename)
+
+        spinner = Spinner('Loading ')
+
+        with open(filename, 'wb') as fd:
+            for chunk in r.iter_content(chunk_size=128):
+                fd.write(chunk)
+                spinner.next()
+        print("写入完毕")
+        checkResult = self.check()
+        if checkResult is "needPay":
+            return "needPay"
+        else:
+            return "success"
+
+    def check(self):
+        fo = open("tmp", "r", encoding="gbk")
+        try:
+            content = fo.read()
+        except (Exception, UnicodeDecodeError):
+            print("乐谱下载成功")
+            return
+        soup = BeautifulSoup(content)
+        # print(soup.prettify())
+        invalid = soup.find(text=re.compile("抱歉，原附件链接已失效"))
+        needPay = soup.find(text=re.compile("附件需要付费，请您付费后下载"))
+
+        if invalid is not None:
+            print("链接失效")
+            newlink = "http://bbs.guitarera.com/" + soup.select("#messagetext a")[0].attrs['href']
+            print("新链接：", newlink)
+            self.download(newlink)
+        elif needPay is not None:
+            print("该附件收费")
+            return "needPay"
+        else:
+            return
+
+    def rename(self,src,dst):
+        os.rename(src, dst)

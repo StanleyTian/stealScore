@@ -26,6 +26,7 @@ if checkpoint > 0:
     if a is not "y" or "Y":
         # 重新爬取
         checkpoint = -1
+        setting['checkpoint'] = -1
 
 boardBaseUrl = "http://bbs.guitarera.com/forum-20-1.html"
 scoreFolderPath = "./score"
