@@ -18,7 +18,7 @@ session = requests.session()
 session.cookies = cookielib.LWPCookieJar(filename='cookies_LWP')
 try:
     session.cookies.load(ignore_discard = True,ignore_expires=True)
-    print("Cookie 已加载")
+    print("Cookie_ll 已加载")
     print(session.cookies)
 except:
     print("Cookie 未能加载")
