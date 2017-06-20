@@ -3,6 +3,7 @@ import re
 import os
 import json
 import time
+import sys
 from progress.spinner import Spinner
 
 
@@ -12,6 +13,7 @@ class Spider:
     settingIndex = -1
     allPostUrls = []
     setting = {}
+    scoreFolderPath = "./score/"
 
     # 构造函数
     def __init__(self, headers, session, scoreFolderPath,setting):
@@ -21,18 +23,18 @@ class Spider:
         self.scoreFolderPath = scoreFolderPath
         self.setting = setting
 
-    def formatSingleFloor(self, id, soup):
+    def formatSingleFloor(self, id, soup, postTitle):
 
-        postTitleList = soup.select("#"+id+" .pcb h2")
+        floorTitleList = soup.select("#"+id+" .pcb h2")
         postContentList = soup.select("#"+id+" .t_f")
         postDownloadList = soup.select("#"+id+" .attnm a");
 
         fullContent = ""
-        postTitle = ""
+        floorTitle = ""
         postContent = ""
         downloadLinks = {}
-        if len(postTitleList) > 0:
-            postTitle = postTitleList[0].string
+        if len(floorTitleList) > 0:
+            floorTitle = floorTitleList[0].string
 
         if len(postContentList) > 0:
             postContent = postContentList[0].text
@@ -44,14 +46,29 @@ class Spider:
         #print(postTitle)
         #print(postContent)
 
-        fullContent += "## "+postTitle + "\r\r"\
+        fullContent += "## "+floorTitle + "\r\r"\
                        + postContent + "\r\r"\
-                       + "##### 曲谱下载链接："+'\r\r'
+                       + "##### 曲谱："+'\r\r'
+
+        dst = self.scoreFolderPath+"/["+str(self.settingIndex+1)+"] "+postTitle
+        if not os.path.exists(dst):
+            os.makedirs(dst)
 
         for i in downloadLinks:
-            fullContent += "[" + i +"](http://bbs.guitarera.com/" + downloadLinks[i] + ")" + "\r\r"
-            self.download(downloadLinks[i])
-            self.rename("tmp",i)
+            downloadResult = self.download("http://bbs.guitarera.com/"+downloadLinks[i],dst=dst)
+            if downloadResult is "success":
+                tmpFullName = dst + "/tmp"
+                fileFullName = dst + "/" + i
+                self.rename(tmpFullName, fileFullName)
+                fullContent += "<font color=green>[已下载][[点我打开](../"+fileFullName+")]</font>"
+            elif downloadResult is "needPay":
+                fullContent += "<font color=yellow>[未下载 需付费]</font>"
+            elif downloadResult is "timeout":
+                fullContent += "<font color=red>[下载失败 已超时]</font>"
+            else:
+                fullContent += "<font color=red>[下载失败]</font>"
+            fullContent += "  原谱下载链接：[" + i +"](http://bbs.guitarera.com/" + downloadLinks[i] + ")" + "\r\r"
+
             time.sleep(5)
 
         fullContent += "--------------------------" + "\r\r"
@@ -165,7 +182,7 @@ class Spider:
 
         r = self.session.get(url,headers = self.headers)
         htmlContent = r.text
-        print(r.text)
+        #print(r.text)
         soup = BeautifulSoup(htmlContent);
         #print(soup.title.string)
         postSubject = soup.select("#thread_subject")[0].string # select返回是一个list，即使只有一个元素也是，[0]表示第一个元素
@@ -180,7 +197,7 @@ class Spider:
             allFloorsId.append(tag.attrs['id'])
 
         for singleFloorId in allFloorsId:
-            mdContent += self.formatSingleFloor(singleFloorId,soup)
+            mdContent += self.formatSingleFloor(singleFloorId,soup,postTitle=postSubject)
 
         self.getSinglePageAllDownloadLinks(soup)
         #print(mdContent)
@@ -247,31 +264,38 @@ class Spider:
         settingFile.write(json.dumps(self.setting, sort_keys=True, indent=4))
         settingFile.close()
 
-    def download(self,link):
-        r = self.session.get(link, headers=self.headers, allow_redirects=True, stream=True)
-        filename = "tmp"
-        print("开始写入文件：", filename)
+    def download(self,link,dst):
+        try:
+            r = self.session.get(link, headers=self.headers, allow_redirects=True, stream=True,timeout = 3*60)
+            filename = dst+"/tmp"
+            print("开始下载：",link)
+            print("开始写入文件：", filename)
 
-        spinner = Spinner('Loading ')
+            with open(filename, 'wb') as fd:
+                i=1;
+                for chunk in r.iter_content(chunk_size=128):
+                    fd.write(chunk)
+                    print("已写入："+str(128*i), end='\r')
+                    i=i+1
 
-        with open(filename, 'wb') as fd:
-            for chunk in r.iter_content(chunk_size=128):
-                fd.write(chunk)
-                spinner.next()
-        print("写入完毕")
-        checkResult = self.check()
-        if checkResult is "needPay":
-            return "needPay"
-        else:
-            return "success"
+            print("写入完毕")
+            checkResult = self.check(dst=dst)
+            if checkResult is "needPay":
+                return "needPay"
+            else:
+                return "success"
+        except Exception:
+            print("请求超时")
+            return "timeout"
 
-    def check(self):
-        fo = open("tmp", "r", encoding="gbk")
+    def check(self,dst):
+        filename = dst+"/tmp"
+        fo = open(filename, "r", encoding="gbk")
         try:
             content = fo.read()
         except (Exception, UnicodeDecodeError):
             print("乐谱下载成功")
-            return
+            return "success"
         soup = BeautifulSoup(content)
         # print(soup.prettify())
         invalid = soup.find(text=re.compile("抱歉，原附件链接已失效"))
@@ -281,7 +305,7 @@ class Spider:
             print("链接失效")
             newlink = "http://bbs.guitarera.com/" + soup.select("#messagetext a")[0].attrs['href']
             print("新链接：", newlink)
-            self.download(newlink)
+            self.download(newlink,dst)
         elif needPay is not None:
             print("该附件收费")
             return "needPay"

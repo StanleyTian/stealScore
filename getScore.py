@@ -21,7 +21,7 @@ settingFile.close()
 # checkpoint 表示已爬的post
 checkpoint = int(setting["checkpoint"])
 
-if checkpoint > 0:
+if checkpoint >= 0:
     a = input("发现上次的爬取未完成，是否继续？(y/n)")
     if a is not "y" or "Y":
         # 重新爬取
