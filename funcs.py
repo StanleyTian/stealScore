@@ -47,8 +47,9 @@ class Spider:
         #print(postContent)
 
         fullContent += "## "+floorTitle + "\r\r"\
-                       + postContent + "\r\r"\
-                       + "##### 曲谱："+'\r\r'
+                       + postContent + "\r\r"
+        if len(downloadLinks) > 0:
+           fullContent+= "##### 曲谱："+'\r\r'
 
         dst = self.scoreFolderPath+"/["+str(self.settingIndex+1)+"] "+postTitle
         if not os.path.exists(dst):
@@ -58,18 +59,17 @@ class Spider:
             downloadResult = self.download("http://bbs.guitarera.com/"+downloadLinks[i],dst=dst,maxTry=5)
             tmpFullName = dst + "/tmp"
             fileFullName = dst + "/" + i
-            hiddenDownloaded = "<span style='visibility:hidden'>"\
-                               +"<font color=green>[已下载][[点我打开](../"+fileFullName+")]</font>"+"<span>"
+            hiddenDownloaded = "<span style='display:none'>"+"<font color=green><a href=\"../"+fileFullName+"\">"+i+"</a> [已下载]</font>"+"</span>"
             if downloadResult is "success":
                 self.rename(tmpFullName, fileFullName)
-                fullContent += "<font color=green>[已下载][[点我打开](../"+fileFullName+")]</font>"
+                fullContent += "<font color=green><a href=\"../"+fileFullName+"\">"+i+"</a> [已下载]</font>"
             elif downloadResult is "needPay":
                 fullContent += "<font color=yellow>[未下载 需付费]</font>"+hiddenDownloaded
             elif downloadResult is "timeout":
                 fullContent += "<font color=red>[下载失败 已超时]</font>"+hiddenDownloaded
             else:
                 fullContent += "<font color=red>[下载失败]</font>"+hiddenDownloaded
-            fullContent += "  原谱下载链接：[" + i +"](http://bbs.guitarera.com/" + downloadLinks[i] + ")" + "\r\r"
+            fullContent += "  [原谱下载链接](http://bbs.guitarera.com/" + downloadLinks[i] + ")" + "\r\r"
 
             time.sleep(5)
 
