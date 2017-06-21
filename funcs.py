@@ -55,18 +55,20 @@ class Spider:
             os.makedirs(dst)
 
         for i in downloadLinks:
-            downloadResult = self.download("http://bbs.guitarera.com/"+downloadLinks[i],dst=dst)
+            downloadResult = self.download("http://bbs.guitarera.com/"+downloadLinks[i],dst=dst,maxTry=5)
+            tmpFullName = dst + "/tmp"
+            fileFullName = dst + "/" + i
+            hiddenDownloaded = "<span style='visibility:hidden'>"\
+                               +"<font color=green>[已下载][[点我打开](../"+fileFullName+")]</font>"+"<span>"
             if downloadResult is "success":
-                tmpFullName = dst + "/tmp"
-                fileFullName = dst + "/" + i
                 self.rename(tmpFullName, fileFullName)
                 fullContent += "<font color=green>[已下载][[点我打开](../"+fileFullName+")]</font>"
             elif downloadResult is "needPay":
-                fullContent += "<font color=yellow>[未下载 需付费]</font>"
+                fullContent += "<font color=yellow>[未下载 需付费]</font>"+hiddenDownloaded
             elif downloadResult is "timeout":
-                fullContent += "<font color=red>[下载失败 已超时]</font>"
+                fullContent += "<font color=red>[下载失败 已超时]</font>"+hiddenDownloaded
             else:
-                fullContent += "<font color=red>[下载失败]</font>"
+                fullContent += "<font color=red>[下载失败]</font>"+hiddenDownloaded
             fullContent += "  原谱下载链接：[" + i +"](http://bbs.guitarera.com/" + downloadLinks[i] + ")" + "\r\r"
 
             time.sleep(5)
@@ -264,29 +266,35 @@ class Spider:
         settingFile.write(json.dumps(self.setting, sort_keys=True, indent=4))
         settingFile.close()
 
-    def download(self,link,dst):
-        try:
-            r = self.session.get(link, headers=self.headers, allow_redirects=True, stream=True,timeout = 3*60)
-            filename = dst+"/tmp"
-            print("开始下载：",link)
-            print("开始写入文件：", filename)
+    def download(self,link,dst,maxTry=1):
+        eihwhw = 0
+        checkResult = ""
+        while eihwhw<maxTry:
+            try:
+                print("开始尝试第",str(eihwhw+1),"次下载")
+                r = self.session.get(link, headers=self.headers, allow_redirects=True, stream=True,timeout = 3*60)
+                filename = dst+"/tmp"
+                print("开始下载：",link)
+                print("开始写入文件：", filename)
 
-            with open(filename, 'wb') as fd:
-                i=1;
-                for chunk in r.iter_content(chunk_size=128):
-                    fd.write(chunk)
-                    print("已写入："+str(128*i), end='\r')
-                    i=i+1
+                with open(filename, 'wb') as fd:
+                    i=1
+                    for chunk in r.iter_content(chunk_size=128):
+                        fd.write(chunk)
+                        print("已写入："+str(128*i), end='\r')
+                        i=i+1
 
-            print("写入完毕")
-            checkResult = self.check(dst=dst)
-            if checkResult is "needPay":
-                return "needPay"
-            else:
-                return "success"
-        except Exception:
-            print("请求超时")
-            return "timeout"
+                print("写入完毕")
+                checkResult = self.check(dst=dst)
+                break
+
+            except Exception:
+                print("请求超时")
+                checkResult = "timeout"
+                eihwhw += 1
+
+        return checkResult
+
 
     def check(self,dst):
         filename = dst+"/tmp"
