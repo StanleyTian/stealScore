@@ -197,5 +197,5 @@ ENV/
 
 # End of https://www.gitignore.io/api/python
 
-score[*]/
+score*/
 score/
