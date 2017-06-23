@@ -60,15 +60,16 @@ class Spider:
             tmpFullName = dst + "/tmp"
             fileFullName = dst + "/" + i
             hiddenDownloaded = "<span style='display:none'>"+"<font color=green><a href=\"../"+fileFullName+"\">"+i+"</a> [已下载]</font>"+"</span>"
+            hiddenDownloaded = ""
             if downloadResult is "success":
                 self.rename(tmpFullName, fileFullName)
                 fullContent += "<font color=green><a href=\"../"+fileFullName+"\">"+i+"</a> [已下载]</font>"
             elif downloadResult is "needPay":
-                fullContent += "<font color=yellow>[未下载 需付费]</font>"+hiddenDownloaded
+                fullContent += "<font color=yellow><a href=\"../"+fileFullName+"\">"+i+"</a> [未下载 需付费]</font>"+hiddenDownloaded
             elif downloadResult is "timeout":
-                fullContent += "<font color=red>[下载失败 已超时]</font>"+hiddenDownloaded
+                fullContent += "<font color=red><a href=\"../"+fileFullName+"\">"+i+"</a> [下载失败 已超时]</font>"+hiddenDownloaded
             else:
-                fullContent += "<font color=red>[下载失败]</font>"+hiddenDownloaded
+                fullContent += "<font color=red><a href=\"../"+fileFullName+"\">"+i+"</a> [下载失败]</font>"+hiddenDownloaded
             fullContent += "  [原谱下载链接](http://bbs.guitarera.com/" + downloadLinks[i] + ")" + "\r\r"
 
             time.sleep(5)
@@ -307,7 +308,7 @@ class Spider:
         soup = BeautifulSoup(content)
         # print(soup.prettify())
         invalid = soup.find(text=re.compile("抱歉，原附件链接已失效"))
-        needPay = soup.find(text=re.compile("附件需要付费，请您付费后下载"))
+        needPay = soup.find(text=re.compile("购买附件"))
 
         if invalid is not None:
             print("链接失效")
