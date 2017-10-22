@@ -1,5 +1,6 @@
 {
     "allPostUrls": [
+        "http://bbs.guitarera.com/thread-5459-1-1.html",
         "http://bbs.guitarera.com/thread-6487-1-1.html",
         "http://bbs.guitarera.com/thread-6013-1-1.html",
         "http://bbs.guitarera.com/thread-1939-1-1.html",
@@ -20,7 +21,7 @@
         "http://bbs.guitarera.com/thread-3074-1-1.html",
         "http://bbs.guitarera.com/thread-2960-1-1.html",
         "http://bbs.guitarera.com/thread-5168-1-1.html",
-        "http://bbs.guitarera.com/thread-5262-1-1.html",
+        "http://bbs.guitarera.com/thread-5262-1-2.html",
         "http://bbs.guitarera.com/thread-11903-1-2.html",
         "http://bbs.guitarera.com/thread-24102-1-2.html",
         "http://bbs.guitarera.com/thread-2190-1-2.html",
@@ -45,7 +46,7 @@
         "http://bbs.guitarera.com/thread-22365-1-2.html",
         "http://bbs.guitarera.com/thread-2503-1-2.html",
         "http://bbs.guitarera.com/thread-8705-1-2.html",
-        "http://bbs.guitarera.com/thread-5066-1-2.html",
+        "http://bbs.guitarera.com/thread-5066-1-3.html",
         "http://bbs.guitarera.com/thread-5227-1-3.html",
         "http://bbs.guitarera.com/thread-2103-1-3.html",
         "http://bbs.guitarera.com/thread-3247-1-3.html",
@@ -70,7 +71,7 @@
         "http://bbs.guitarera.com/thread-4483-1-3.html",
         "http://bbs.guitarera.com/thread-7800-1-3.html",
         "http://bbs.guitarera.com/thread-2121-1-3.html",
-        "http://bbs.guitarera.com/thread-3612-1-3.html",
+        "http://bbs.guitarera.com/thread-3612-1-4.html",
         "http://bbs.guitarera.com/thread-7959-1-4.html",
         "http://bbs.guitarera.com/thread-5448-1-4.html",
         "http://bbs.guitarera.com/thread-3517-1-4.html",
@@ -80,7 +81,6 @@
         "http://bbs.guitarera.com/thread-18798-1-4.html",
         "http://bbs.guitarera.com/thread-4750-1-4.html",
         "http://bbs.guitarera.com/thread-74721-1-4.html",
-        "http://bbs.guitarera.com/thread-5459-1-4.html",
         "http://bbs.guitarera.com/thread-2169-1-4.html",
         "http://bbs.guitarera.com/thread-2005-1-4.html",
         "http://bbs.guitarera.com/thread-2835-1-4.html",
@@ -224,5 +224,5 @@
         "http://bbs.guitarera.com/thread-2046-1-10.html",
         "http://bbs.guitarera.com/thread-2044-1-10.html"
     ],
-    "checkpoint": -1
+    "checkpoint": 222
 }

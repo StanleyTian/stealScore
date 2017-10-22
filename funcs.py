@@ -56,7 +56,8 @@ class Spider:
             os.makedirs(dst)
 
         for i in downloadLinks:
-            downloadResult = self.download("http://bbs.guitarera.com/"+downloadLinks[i],dst=dst,maxTry=5)
+            print('-------------------')
+            downloadResult = self.download("http://bbs.guitarera.com/"+downloadLinks[i],dst=dst,maxTry=10)
             tmpFullName = dst + "/tmp"
             fileFullName = dst + "/" + i
             hiddenDownloaded = "<span style='display:none'>"+"<font color=green><a href=\"../"+fileFullName+"\">"+i+"</a> [已下载]</font>"+"</span>"
@@ -72,7 +73,7 @@ class Spider:
                 fullContent += "<font color=red><a href=\"../"+fileFullName+"\">"+i+"</a> [下载失败]</font>"+hiddenDownloaded
             fullContent += "  [原谱下载链接](http://bbs.guitarera.com/" + downloadLinks[i] + ")" + "\r\r"
 
-            time.sleep(5)
+            time.sleep(3)
 
         fullContent += "--------------------------" + "\r\r"
 
@@ -240,8 +241,8 @@ class Spider:
 
     # 爬取一个版块
     def crawlSingleBoard(self, boardUrl):
-        allboardUrls = self.getBoardAllPagesUrl(boardUrl)
         if self.settingIndex is -1:
+            allboardUrls = self.getBoardAllPagesUrl(boardUrl)
             for boardUrl in allboardUrls:
                 currentBoardPageAllPostUrls = self.getBoardOnePagePostUrl(boardUrl)
                 self.allPostUrls.extend(currentBoardPageAllPostUrls)
@@ -273,7 +274,7 @@ class Spider:
         while eihwhw<maxTry:
             try:
                 print("开始尝试第",str(eihwhw+1),"次下载")
-                r = self.session.get(link, headers=self.headers, allow_redirects=True, stream=True,timeout = 3*60)
+                r = self.session.get(link, headers=self.headers, allow_redirects=True, stream=True,timeout = 2*60)
                 filename = dst+"/tmp"
                 print("开始下载：",link)
                 print("开始写入文件：", filename)

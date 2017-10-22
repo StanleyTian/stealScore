@@ -23,7 +23,7 @@ checkpoint = int(setting["checkpoint"])
 
 if checkpoint >= 0:
     a = input("发现上次的爬取未完成，是否继续？(y/n)")
-    if a is not "y":
+    if a is "n":
         # 重新爬取
         checkpoint = -1
         setting['checkpoint'] = -1

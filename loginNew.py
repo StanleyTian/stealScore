@@ -37,18 +37,22 @@ def login(account,password):
         'formhash':formhash
     }
     loginPage = session.post(postUrl,data=postData,headers=headers,allow_redirects=True)
-    soup = BeautifulSoup(loginPage.text)
-    print(soup.prettify())
+    soup = BeautifulSoup(loginPage.text, 'lxml')
+    #print(soup.prettify())
 
     print(session.cookies)
     A = session.cookies
     session.cookies.save(ignore_discard = True,ignore_expires=True)
-    print(soup.find(text=re.compile("1016zym")))
+    searchResult = soup.find(text=re.compile("1016zym"))
+    if(len(searchResult) > 0):
+        print("登陆成功")
+    else:
+        print("登录失败")
     return ""
 def getFormhash():
     url = "http://bbs.guitarera.com/member.php?mod=register&mobile=no"
     page = session.get(url,headers=headers).text
-    soup = BeautifulSoup(page)
+    soup = BeautifulSoup(page,'lxml')
     # print(soup.prettify())
     k = soup.find_all(type="hidden")
     r = soup.find_all("formhash")
